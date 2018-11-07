@@ -1,38 +1,27 @@
-const path = require('path');
-const http = require('http');
-const express = require('express');
-const socketIO = require('socket.io');
+var expect = require('expect');
 
-const {generateMessage} = require('./utils/message');
-const publicPath = path.join(__dirname, '../public');
-const port = process.env.PORT || 3000;
+var {generateMessage, generateLocationMessage} = require('./message');
 
-var app = express();
-var server = http.createServer(app);
-var io = socketIO(server);
+describe('generateMessage', () => {
+  it('should generate correct message object', () => {
+    var from = 'Jen';
+    var text = 'Some message';
+    var message = generateMessage(from, text);
 
-app.use(express.static(publicPath));
-
-io.on('connection', (socket) => {
-	console.log('New user connected');
-
-	socket.emit('newMessage', generateMessage('Admin', 'Welcome to the chat app'));
-
-	socket.broadcast.emit('newMessage', generateMessage("Admin", "New user joined"));
-
-	socket.on('createMessage', (message, callback) => {
-		console.log('createMessage', message);
-		io.emit('newMessage', generateMessage(message.from, message.text));
-		callback('This is from the server');
-	// socket.broadcast.emit('newMessage', {
-	// 	from: message.from,
-	// 	text: message.text,
-	// 	createdAt: new Date().getTime()
-	// });
-
-	});
+    expect(message.createdAt).toBeA('number');
+    expect(message).toInclude({from, text});
+  });
 });
 
-server.listen(port, () => {
-	console.log(`Server is up on port ${port}`);
+describe('generateLocationMessage', () => {
+  it('should generate correct location object', () => {
+    var from = 'Deb';
+    var latitude = 15;
+    var longitude = 19;
+    var url = 'https://www.google.com/maps?q=15,19';
+    var message = generateLocationMessage(from, latitude, longitude);
+
+    expect(message.createdAt).toBeA('number');
+    expect(message).toInclude({from, url});
+  });
 });
